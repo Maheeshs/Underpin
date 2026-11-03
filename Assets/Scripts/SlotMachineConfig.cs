@@ -20,7 +20,8 @@ public class SlotMachineConfig : ScriptableObject
         // Three symbols, in left-to-right order
         public SlotSymbol[] combination = new SlotSymbol[3];
 
-        public int reward;
+        [Header("Reward Multiplier")]
+        public int multiplier = 1;
     }
 
     [Header("Symbols")]

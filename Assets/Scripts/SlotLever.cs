@@ -11,6 +11,7 @@ public class SlotLever : MonoBehaviour
 
     [Header("References")]
     public SlotMachineController slotMachine;
+    public PayoutManager payoutManager;
 
     [Header("Animation")]
     public float leverDownTime = 0.2f;
@@ -23,21 +24,27 @@ public class SlotLever : MonoBehaviour
             slotMachine.IsSpinning)
             return;
 
-        StartCoroutine(PullLever());
+        payoutManager.ShowBetPanel();
     }
 
-    IEnumerator PullLever()
+    public void StartSpinAfterBet(int bet)
+    {
+        if (isPulling || slotMachine.IsSpinning)
+            return;
+
+        StartCoroutine(PullLevers(bet));
+    }
+
+    IEnumerator PullLevers(int bet)
     {
         isPulling = true;
 
-        // Lever goes down
         leverImage.sprite = leverDown;
 
-        slotMachine.TrySpin();
+        slotMachine.TrySpin(bet);
 
         yield return new WaitForSeconds(leverDownTime);
 
-        // Lever returns up
         leverImage.sprite = leverUp;
 
         isPulling = false;

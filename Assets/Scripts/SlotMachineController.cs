@@ -24,48 +24,57 @@ public class SlotMachineController : MonoBehaviour
 
     public bool IsSpinning => isSpinning;
 
-    public void TrySpin()
+    [Header("References")]
+    public PayoutManager payoutManager;
+
+    private int currentBet;
+
+    public void TrySpin(int bet)
     {
         if (isSpinning || config == null)
             return;
 
+        currentBet = bet;
+
         StartCoroutine(SpinMachine());
     }
+IEnumerator SpinMachine()
+{
+    isSpinning = true;
 
-    IEnumerator SpinMachine()
+    resultText.text = "";
+
+    // Generate final middle row for all 3 reels
+    for (int i = 0; i < 3; i++)
     {
-        isSpinning = true;
-
-        resultText.text = "";
-
-        // Generate final middle row.
-        for (int i = 0; i < 3; i++)
-        {
-            finalResults[i] = GetRandomSymbol();
-        }
-
-        // Spin from left to right.
-        for (int i = 0; i < 3; i++)
-        {
-            SlotSymbol top = GetRandomSymbol();
-            SlotSymbol bottom = GetRandomSymbol();
-
-            yield return StartCoroutine(
-                reels[i].Spin(
-                    top,
-                    finalResults[i],
-                    bottom,
-                    spinDuration
-                )
-            );
-
-            yield return new WaitForSeconds(reelStopDelay);
-        }
-
-        CheckWin();
-
-        isSpinning = false;
+        finalResults[i] = GetRandomSymbol();
     }
+
+    // Start all reels together
+    for (int i = 0; i < 3; i++)
+    {
+        StartCoroutine(
+            reels[i].Spin(
+                GetRandomSymbol(),
+                finalResults[i],
+                GetRandomSymbol(),
+                spinDuration + (i * reelStopDelay)
+            )
+        );
+    }
+
+    // Wait until all reels finish
+    while (reels[0].IsSpinning ||
+           reels[1].IsSpinning ||
+           reels[2].IsSpinning)
+    {
+        yield return null;
+    }
+
+    CheckWin();
+
+    isSpinning = false;
+}
 
     SlotSymbol GetRandomSymbol()
     {
@@ -80,9 +89,15 @@ public class SlotMachineController : MonoBehaviour
 
         if (rule != null)
         {
+            int reward = currentBet * rule.multiplier;
+
             resultText.text =
                 "YOU WIN! " + rule.ruleName +
-                " Reward: " + rule.reward;
+                "\nBet: " + currentBet +
+                "\nMultiplier: " + rule.multiplier + "x" +
+                "\nReward: " + reward;
+
+            payoutManager.AddWinnings(reward);
         }
         else
         {

@@ -17,6 +17,7 @@ public class ReelController : MonoBehaviour
     public float stopDuration = 0.8f;
 
     private bool isSpinning;
+    public bool IsSpinning => isSpinning;
     private float totalHeight;
 
     void Awake()
